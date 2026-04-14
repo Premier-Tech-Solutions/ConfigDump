@@ -26,21 +26,9 @@ public class Device
 
     public async Task<ConfigResult> DumpConfig()
     {
-        if (this.IsAruba())
-        {
-            return await Aruba.DumpHTTP(this);
-        }
-        else if (this.IsMeraki())
+        if (this.IsMeraki())
         {
             return await Meraki.Instance.DumpCloud(this);
-        }
-        else if (this.IsRuckus())
-        {
-            return await Ruckus.DumpHTTPS(this);
-        }
-        else if (this.IsLexmark())
-        {
-            return await Lexmark.DumpHTTP(this);
         }
 
         return new ConfigResult(new Exception("No config dumping method for device."));

@@ -5,6 +5,10 @@ A command-line utility to bulk dump config files from various devices.
 
 ```json
 {
+    "meraki": {
+        "api_key": "0123456890abcdef",
+        "organization_id": "1234567890",
+    },
     "devices": [
         {
             "id": "device-1",
