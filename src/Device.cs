@@ -34,6 +34,10 @@ public class Device
         {
             return await Aruba.DumpHTTP(this);
         }
+        else if (this.IsRuckus())
+        {
+            return await Ruckus.DumpHTTPS(this);
+        }
 
         return new ConfigResult(new Exception("No config dumping method for device."));
     }
