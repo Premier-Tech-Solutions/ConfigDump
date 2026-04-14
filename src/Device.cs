@@ -30,6 +30,10 @@ public class Device
         {
             return await Meraki.Instance.DumpCloud(this);
         }
+        else if (this.IsAruba())
+        {
+            return await Aruba.DumpHTTP(this);
+        }
 
         return new ConfigResult(new Exception("No config dumping method for device."));
     }
