@@ -1,0 +1,17 @@
+namespace ConfigDump;
+
+// referenced from [MS-ERREF] 2.2 Win32 Error Codes
+public static class ExitCode
+{
+    public const int
+    SUCCESS = 0x00000000,
+    FILE_NOT_FOUND = 0x00000002,
+    PATH_NOT_FOUND = 0x00000003,
+    ACCESS_DENIED = 0x00000005,
+    INVALID_DATA = 0x0000000D,
+    BAD_NET_RESP = 0x0000003A,
+    FILENAME_EXCED_RANGE = 0x000000CE,
+    OPEN_FAILED = 0x0000006E,
+    TIMEOUT = 0x000005B4,
+    INVALID_COMMAND_LINE = 0x00000667;
+}
