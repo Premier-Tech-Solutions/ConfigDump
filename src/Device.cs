@@ -38,6 +38,10 @@ public class Device
         {
             return await Ruckus.DumpHTTPS(this);
         }
+        else if (this.IsLexmark())
+        {
+            return await Lexmark.DumpHTTP(this);
+        }
 
         return new ConfigResult(new Exception("No config dumping method for device."));
     }
