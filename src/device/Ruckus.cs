@@ -5,7 +5,8 @@ using System.Net;
 public static class Ruckus
 {
     // Designed based on Ruckus R310
-    public static bool IsRuckus(this Device device) => device.model.Contains("Ruckus", StringComparison.InvariantCultureIgnoreCase);
+    public static bool IsRuckus(this Device device)
+        => device.model.Contains("Ruckus", StringComparison.InvariantCultureIgnoreCase);
 
     public static async Task<ConfigResult> DumpHTTPS(Device device)
     {

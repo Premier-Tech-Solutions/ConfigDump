@@ -9,7 +9,8 @@ using Microsoft.OpenApi;
 
 public static class MerakiExtensions
 {
-    public static bool IsMeraki(this Device device) => device.model.Contains("Meraki", StringComparison.InvariantCultureIgnoreCase);
+    public static bool IsMeraki(this Device device)
+        => device.model.Contains("Meraki", StringComparison.InvariantCultureIgnoreCase);
 }
 
 public class MerakiInfo
