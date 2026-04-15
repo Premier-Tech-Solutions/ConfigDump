@@ -34,6 +34,7 @@ public class Device
         (this.IsHPEUPS, HPEUPS.DumpHTTPS),
         (this.IsHPESwitch, HPESwitch.DumpHTTPS),
         (this.IsArubaION, ArubaION.DumpHTTPS),
+        (this.IsRicoh, Ricoh.DumpHTTP),
     ];
 
     public async Task<ConfigResult> DumpConfig()
