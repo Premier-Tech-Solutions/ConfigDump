@@ -14,6 +14,8 @@ public class Credential
     public required Uri url;
     public required string username;
     public required string password;
+
+    public Uri GetBaseUri(string scheme) => new($"{scheme}://{url.Host}/");
 }
 
 public class Device
@@ -41,6 +43,10 @@ public class Device
         else if (this.IsLexmark())
         {
             return await Lexmark.DumpHTTP(this);
+        }
+        else if (this.IsHPEUPS())
+        {
+            return await HPEUPS.DumpHTTPS(this);
         }
 
         return new ConfigResult(new Exception("No config dumping method for device."));

@@ -22,7 +22,7 @@ public static class Ruckus
         };
         HttpClient httpClient = new(httpHandler)
         {
-            BaseAddress = credential.url
+            BaseAddress = credential.GetBaseUri("https")
         };
 
         // Login to get session token

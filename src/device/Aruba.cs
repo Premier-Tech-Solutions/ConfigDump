@@ -40,11 +40,11 @@ public static class Aruba
     public async static Task<ConfigResult> DumpHTTP(Device device)
     {
         HttpResponseMessage response;
-        Credential credential = device.credentials[0];
+        Credential credential = device.GetAdminLogin();
 
         HttpClient httpClient = new()
         {
-            BaseAddress = credential.url
+            BaseAddress = credential.GetBaseUri("http")
         };
 
         // Go to index to get session token cookie

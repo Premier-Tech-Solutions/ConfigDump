@@ -7,7 +7,7 @@ namespace ConfigDump.Device;
 public static class HPEUPS
 {
     // Designed based on HPE Single Phase 1Gb UPS Network Management Card
-    public static bool IsHPEUPS(Device device)
+    public static bool IsHPEUPS(this Device device)
         => device.model.Contains("HPE", StringComparison.InvariantCultureIgnoreCase) &&
             device.model.Contains("UPS", StringComparison.InvariantCultureIgnoreCase);
 
@@ -27,7 +27,7 @@ public static class HPEUPS
         };
         HttpClient httpClient = new(httpHandler)
         {
-            BaseAddress = new("https://" + device.GetLocalIp() + "/")
+            BaseAddress = credential.GetBaseUri("https")
         };
 
         // Login to get access token
