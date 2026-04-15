@@ -14,7 +14,7 @@ public static class HPEUPS
     public async static Task<ConfigResult> DumpHTTPS(Device device)
     {
         CookieContainer cookies = new();
-        Credential credential = device.credentials[0];
+        Credential credential = device.GetAdminLogin();
         HttpResponseMessage response;
 
         // Create HTTP Client that ignores invalid SSL certificates

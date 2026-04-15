@@ -10,7 +10,7 @@ public static class Ruckus
 
     public static async Task<ConfigResult> DumpHTTPS(Device device)
     {
-        Credential credential = device.credentials[0];
+        Credential credential = device.GetAdminLogin();
         HttpResponseMessage response;
 
         // Create HTTP Client that ignores invalid SSL certificates

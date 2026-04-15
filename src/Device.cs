@@ -60,6 +60,18 @@ public class Device
             _ => false,
         };
     });
+
+    public Credential GetAdminLogin()
+    {
+        try
+        {
+            return credentials.First(cred => cred.username.Contains("admin", StringComparison.InvariantCultureIgnoreCase));
+        }
+        catch (InvalidOperationException)
+        {
+            return credentials[0];
+        }
+    }
 }
 
 public class ConfigResult

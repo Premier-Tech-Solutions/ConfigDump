@@ -13,7 +13,7 @@ public static class Aruba
     [Obsolete("This method is currently unfinished due to SSH misbehaving.", false)]
     public async static Task<byte[]> DumpSSH(Device device)
     {
-        Credential credential = device.credentials[0];
+        Credential credential = device.GetAdminLogin();
 
         SshClient client = new(credential.url.Host, 22, credential.username, credential.password);
         await client.ConnectAsync(new CancellationToken(false));
