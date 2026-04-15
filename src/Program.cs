@@ -69,15 +69,18 @@ class Program
         {
             ConfigResult result;
 
+            await Console.Out.WriteLineAsync($"Dumping configuration for {device.id}...");
             try
             {
                 result = await device.DumpConfig();
             }
             catch (Exception ex)
             {
+                await Console.Error.WriteLineAsync($"{device.id} configuration dump failed! Reason: {ex.Message}");
                 result = new ConfigResult(ex);
             }
 
+            await Console.Out.WriteLineAsync($"{device.id} configuration dumped!");
             configs.Add(device.id, result);
         }));
 
