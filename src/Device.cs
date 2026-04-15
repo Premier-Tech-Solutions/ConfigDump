@@ -27,7 +27,8 @@ public class Device
     public required List<Credential> Credentials { get; set; }
 
     private (Func<bool>, Func<Device, Task<ConfigResult>>)[] ConfigDumpers => [
-        (this.IsMeraki, Meraki.Instance.DumpCloud),
+        // Use lambda expression so Meraki.Instance is only read if needed
+        (this.IsMeraki, (device) => Meraki.Instance.DumpCloud(device)),
         (this.IsAruba, Aruba.DumpHTTP),
         (this.IsRuckus, Ruckus.DumpHTTPS),
         (this.IsLexmark, Lexmark.DumpHTTP),
@@ -78,21 +79,21 @@ public class Device
 
 public class ConfigResult
 {
-    public readonly bool error;
-    public readonly string value;
-    public readonly string? filetype;
+    public bool Error { get; private set; }
+    public string Value { get; private set; }
+    public string? FileType { get; private set; }
 
     public ConfigResult(byte[] value, string filetype)
     {
-        error = false;
-        this.value = Convert.ToBase64String(value);
-        this.filetype = filetype;
+        Error = false;
+        Value = Convert.ToBase64String(value);
+        FileType = filetype;
     }
 
     public ConfigResult(Exception ex)
     {
-        error = true;
-        value = ex.Message;
+        Error = true;
+        Value = ex.Message;
     }
 }
 
