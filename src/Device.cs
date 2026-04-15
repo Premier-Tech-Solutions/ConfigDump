@@ -48,6 +48,10 @@ public class Device
         {
             return await HPEUPS.DumpHTTPS(this);
         }
+        else if (this.IsHPESwitch())
+        {
+            return await HPESwitch.DumpHTTPS(this);
+        }
 
         return new ConfigResult(new Exception("No config dumping method for device."));
     }
