@@ -6,7 +6,7 @@ public static class Lexmark
 {
     // Designed based on Lexmark E120n
     public static bool IsLexmark(this Device device)
-        => device.model.Contains("Lexmark", StringComparison.InvariantCultureIgnoreCase);
+        => device.Model.Contains("Lexmark", StringComparison.InvariantCultureIgnoreCase);
 
     public static async Task<ConfigResult> DumpHTTP(Device device)
     {

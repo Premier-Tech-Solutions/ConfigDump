@@ -6,7 +6,7 @@ public static class Ruckus
 {
     // Designed based on Ruckus R310
     public static bool IsRuckus(this Device device)
-        => device.model.Contains("Ruckus", StringComparison.InvariantCultureIgnoreCase);
+        => device.Model.Contains("Ruckus", StringComparison.InvariantCultureIgnoreCase);
 
     public static async Task<ConfigResult> DumpHTTPS(Device device)
     {
@@ -27,8 +27,8 @@ public static class Ruckus
 
         // Login to get session token
         response = await httpClient.PostAsync("admin/login.jsp", new FormUrlEncodedContent([
-            KeyValuePair.Create("username", credential.username),
-            KeyValuePair.Create("password", credential.password),
+            KeyValuePair.Create("username", credential.Username),
+            KeyValuePair.Create("password", credential.Password),
             KeyValuePair.Create("ok", "Log\u00A0in"),
         ]));
         if (response.StatusCode != HttpStatusCode.OK)

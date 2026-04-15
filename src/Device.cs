@@ -5,26 +5,26 @@ using System.Net.Sockets;
 
 public class DeviceInfo
 {
-    public MerakiInfo? meraki;
-    public required List<Device> devices;
+    public MerakiInfo? Meraki { get; set; }
+    public required List<Device> Devices { get; set; }
 }
 
 public class Credential
 {
-    public required Uri url;
-    public required string username;
-    public required string password;
+    public required Uri Url { get; set; }
+    public required string Username { get; set; }
+    public required string Password { get; set; }
 
-    public Uri GetBaseUri(string scheme) => new($"{scheme}://{url.Host}/");
+    public Uri GetBaseUri(string scheme) => new($"{scheme}://{Url.Host}/");
 }
 
 public class Device
 {
-    public required string id;
-    public required string serial;
-    public required string model;
-    public required List<IPAddress> ips;
-    public required List<Credential> credentials;
+    public required string Id { get; set; }
+    public required string Serial { get; set; }
+    public required string Model { get; set; }
+    public required List<string> IPs { get; set; }
+    public required List<Credential> Credentials { get; set; }
 
     private (Func<bool>, Func<Device, Task<ConfigResult>>)[] ConfigDumpers => [
         (this.IsMeraki, Meraki.Instance.DumpCloud),
@@ -48,7 +48,7 @@ public class Device
         return new ConfigResult(new Exception("No config dumping method for device."));
     }
 
-    public IPAddress GetLocalIp() => ips.First(ip =>
+    public IPAddress GetLocalIp() => IPs.Select(IPAddress.Parse).First(ip =>
     {
         if (ip.AddressFamily == AddressFamily.InterNetworkV6)
             return ip.IsIPv6LinkLocal;
@@ -67,11 +67,11 @@ public class Device
     {
         try
         {
-            return credentials.First(cred => cred.username.Contains("admin", StringComparison.InvariantCultureIgnoreCase));
+            return Credentials.First(cred => cred.Username.Contains("admin", StringComparison.InvariantCultureIgnoreCase));
         }
         catch (InvalidOperationException)
         {
-            return credentials[0];
+            return Credentials[0];
         }
     }
 }

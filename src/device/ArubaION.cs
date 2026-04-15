@@ -8,9 +8,9 @@ namespace ConfigDump.Device;
 public static class ArubaION
 {
     public static bool IsArubaION(this Device device)
-        => device.model.Contains("aruba", StringComparison.InvariantCultureIgnoreCase) && (
-            device.model.Contains("ION", StringComparison.InvariantCultureIgnoreCase) ||
-            device.model.Contains("Instant On", StringComparison.InvariantCultureIgnoreCase)
+        => device.Model.Contains("aruba", StringComparison.InvariantCultureIgnoreCase) && (
+            device.Model.Contains("ION", StringComparison.InvariantCultureIgnoreCase) ||
+            device.Model.Contains("Instant On", StringComparison.InvariantCultureIgnoreCase)
         );
 
     public async static Task<ConfigResult> DumpHTTPS(Device device)
@@ -33,7 +33,7 @@ public static class ArubaION
         };
 
         string queryParams =
-            $"user={Uri.EscapeDataString(credential.username)}&password={Uri.EscapeDataString(credential.password)}&ssd=true&";
+            $"user={Uri.EscapeDataString(credential.Username)}&password={Uri.EscapeDataString(credential.Password)}&ssd=true&";
 
         // Get encryption setting
         Stream bodyStream = await httpClient.GetStreamAsync("device/wcd?{EncryptionSetting}");
@@ -56,7 +56,7 @@ public static class ArubaION
         if (response.StatusCode != HttpStatusCode.OK)
             throw new Exception($"Could not login, got {(int)response.StatusCode} {response.ReasonPhrase}");
 
-        cookies.Add(new Cookie("userName", credential.username));
+        cookies.Add(new Cookie("userName", credential.Username));
         cookies.Add(new Cookie("sessionID", response.Headers.GetValues("sessionid").First()));
 
         // Download and return configuration

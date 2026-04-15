@@ -8,7 +8,7 @@ public static class Ricoh
     // Designed based on Ricoh MP 501
 
     public static bool IsRicoh(this Device device)
-        => device.model.Contains("Ricoh", StringComparison.InvariantCultureIgnoreCase);
+        => device.Model.Contains("Ricoh", StringComparison.InvariantCultureIgnoreCase);
 
     public async static Task<ConfigResult> DumpHTTP(Device device)
     {
@@ -26,14 +26,14 @@ public static class Ricoh
 
         // Attempt to log in, trying again with default credentials if it doesn't work
         bool loggedIn = false;
-        if (device.credentials.Count > 0)
+        if (device.Credentials.Count > 0)
         {
             // Try logging in with credentials provided
             Credential credential = device.GetAdminLogin();
             response = await httpClient.PostAsJsonAsync("webArch/login.cgi", new
             {
-                userid = credential.username,
-                credential.password,
+                userid = credential.Username,
+                credential.Password,
             });
             // Redirect means correct credentials in this instance
             if (response.StatusCode == HttpStatusCode.Redirect)

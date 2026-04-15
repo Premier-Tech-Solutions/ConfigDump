@@ -8,15 +8,15 @@ public static class Aruba
 {
     // Designed based on Aruba 2930M-24G (JL319A)
     public static bool IsAruba(this Device device)
-        => device.model.Contains("aruba", StringComparison.InvariantCultureIgnoreCase) &&
-            device.model.Contains("JL", StringComparison.InvariantCultureIgnoreCase);
+        => device.Model.Contains("aruba", StringComparison.InvariantCultureIgnoreCase) &&
+            device.Model.Contains("JL", StringComparison.InvariantCultureIgnoreCase);
 
     [Obsolete("This method is currently unfinished due to SSH misbehaving.", false)]
     public async static Task<byte[]> DumpSSH(Device device)
     {
         Credential credential = device.GetAdminLogin();
 
-        SshClient client = new(credential.url.Host, 22, credential.username, credential.password);
+        SshClient client = new(credential.Url.Host, 22, credential.Username, credential.Password);
         await client.ConnectAsync(new CancellationToken(false));
         ShellStream stream = client.CreateShellStream("", 200, 100, uint.MaxValue, uint.MaxValue, 1024);
 
@@ -57,8 +57,8 @@ public static class Aruba
         response = await httpClient.PostAsync(
             "html/logincheck",
             new FormUrlEncodedContent([
-                KeyValuePair.Create("user", credential.username),
-                KeyValuePair.Create("pass", credential.password),
+                KeyValuePair.Create("user", credential.Username),
+                KeyValuePair.Create("pass", credential.Password),
                 KeyValuePair.Create("Submit", "Login"),
             ])
         );

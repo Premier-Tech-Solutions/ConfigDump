@@ -15,7 +15,10 @@ class Program
 
     public static async Task<int> Main(string[] args)
     {
-        JsonSerializerOptions jsonOptions = JsonSerializerOptions.Web;
+        JsonSerializerOptions jsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
         HttpClient httpClient = new();
         DeviceInfo? deviceInfo = null;
         Uri postUrl;
@@ -24,6 +27,7 @@ class Program
         try
         {
             postUrl = new Uri(args[1]);
+            Console.WriteLine("Downloading device information.");
             deviceInfo = await httpClient.GetFromJsonAsync<DeviceInfo>(args[0], jsonOptions)
                 ?? throw new NullReferenceException();
         }
@@ -60,34 +64,35 @@ class Program
         }
 
         // Initialise the Meraki Cloud helper if we have an API key
-        if (deviceInfo.meraki is not null)
-            await Meraki.Initialise(deviceInfo.meraki);
+        if (deviceInfo.Meraki is not null)
+            await Meraki.Initialise(deviceInfo.Meraki);
 
         // Dump all the configs asynchronously
         Dictionary<string, ConfigResult> configs = [];
-        await Task.WhenAll(deviceInfo.devices.Select(async device =>
+        await Task.WhenAll(deviceInfo.Devices.Select(async device =>
         {
             ConfigResult result;
 
-            await Console.Out.WriteLineAsync($"Dumping configuration for {device.id}...");
+            await Console.Out.WriteLineAsync($"Dumping configuration for {device.Id}...");
             try
             {
                 result = await device.DumpConfig();
+                await Console.Out.WriteLineAsync($"{device.Id} configuration dumped!");
             }
             catch (Exception ex)
             {
-                await Console.Error.WriteLineAsync($"{device.id} configuration dump failed! Reason: {ex.Message}");
+                await Console.Error.WriteLineAsync($"{device.Id} configuration dump failed! Reason: {ex.Message}");
                 result = new ConfigResult(ex);
             }
 
-            await Console.Out.WriteLineAsync($"{device.id} configuration dumped!");
-            configs.Add(device.id, result);
+            configs.Add(device.Id, result);
         }));
 
         // Send the configs back
         HttpResponseMessage response;
         try
         {
+            Console.WriteLine("Uploading device configs.");
             response = await httpClient.PostAsJsonAsync(postUrl, configs, jsonOptions);
         }
         catch (HttpRequestException)

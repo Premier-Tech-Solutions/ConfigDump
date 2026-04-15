@@ -8,8 +8,8 @@ public static class HPEUPS
 {
     // Designed based on HPE Single Phase 1Gb UPS Network Management Card
     public static bool IsHPEUPS(this Device device)
-        => device.model.Contains("HPE", StringComparison.InvariantCultureIgnoreCase) &&
-            device.model.Contains("UPS", StringComparison.InvariantCultureIgnoreCase);
+        => device.Model.Contains("HPE", StringComparison.InvariantCultureIgnoreCase) &&
+            device.Model.Contains("UPS", StringComparison.InvariantCultureIgnoreCase);
 
     public async static Task<ConfigResult> DumpHTTPS(Device device)
     {
@@ -35,8 +35,8 @@ public static class HPEUPS
         {
             grant_type = "password",
             scope = "GUIAccess",
-            credential.username,
-            credential.password,
+            credential.Username,
+            credential.Password,
         });
         if (response.StatusCode != HttpStatusCode.OK)
             throw new Exception($"Could not get access token, got {(int)response.StatusCode} {response.ReasonPhrase}");
@@ -46,7 +46,7 @@ public static class HPEUPS
         JsonDocument jsonBody = await JsonDocument.ParseAsync(bodyStream);
         string? accessToken = jsonBody.RootElement.GetProperty("access_token").GetString();
 
-        cookies.Add(new Cookie("eaton_user", credential.username));
+        cookies.Add(new Cookie("eaton_user", credential.Username));
         cookies.Add(new Cookie("eaton_token", accessToken));
         httpClient.DefaultRequestHeaders.Authorization = new("Bearer", accessToken);
 
@@ -54,7 +54,7 @@ public static class HPEUPS
         response = await httpClient.PostAsJsonAsync("rest/mbdetnrs/1.0/managers/1/actions/saveSettings", new
         {
             exclude = Array.Empty<string>(),
-            passphrase = credential.password,
+            passphrase = credential.Password,
         });
         if (response.StatusCode != HttpStatusCode.OK)
             throw new Exception($"Could not download settings, got {(int)response.StatusCode} {response.ReasonPhrase}");

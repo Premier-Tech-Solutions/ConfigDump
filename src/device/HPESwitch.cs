@@ -9,11 +9,11 @@ public static class HPESwitch
     // Designed based on HP hpe1920S_24G
 
     public static bool IsHPESwitch(this Device device)
-        => device.model.Contains("HPE", StringComparison.InvariantCultureIgnoreCase) && (
-            device.model.Contains("1420") ||
-            device.model.Contains("1820") ||
-            device.model.Contains("1920S") ||
-            device.model.Contains("1950")
+        => device.Model.Contains("HPE", StringComparison.InvariantCultureIgnoreCase) && (
+            device.Model.Contains("1420") ||
+            device.Model.Contains("1820") ||
+            device.Model.Contains("1920S") ||
+            device.Model.Contains("1950")
         );
 
     public async static Task<ConfigResult> DumpHTTPS(Device device)
@@ -36,8 +36,8 @@ public static class HPESwitch
         // Login to get session token
         response = await httpClient.PostAsJsonAsync("htdocs/login/login.lua", new
         {
-            credential.username,
-            credential.password
+            credential.Username,
+            credential.Password
         });
         if (response.StatusCode != HttpStatusCode.OK)
             throw new Exception($"Could not login, got {(int)response.StatusCode} {response.ReasonPhrase}");

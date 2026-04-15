@@ -10,7 +10,7 @@ using Microsoft.OpenApi;
 public static class MerakiExtensions
 {
     public static bool IsMeraki(this Device device)
-        => device.model.Contains("Meraki", StringComparison.InvariantCultureIgnoreCase);
+        => device.Model.Contains("Meraki", StringComparison.InvariantCultureIgnoreCase);
 }
 
 public class MerakiInfo
@@ -165,7 +165,7 @@ public class Meraki
         // Backup device configuration
         await PerformOperations(
             zip,
-            $"devices/{device.model} - {device.serial}/",
+            $"devices/{device.Model} - {device.Serial}/",
             // Adapted roughly from https://github.com/meraki/automation-scripts/blob/master/backup_configs/backup_configs.py#L315
             (operation, spec) =>
                 operation.OperationId.StartsWith("getDevice") &&
@@ -180,12 +180,12 @@ public class Meraki
                 ),
             new Dictionary<string, string>()
             {
-                {"device", device.serial}
+                {"device", device.Serial}
             }
         );
 
         // Get device information to get network ID
-        Stream responseStream = await ApiClient.GetStreamAsync("devices/" + device.serial);
+        Stream responseStream = await ApiClient.GetStreamAsync("devices/" + device.Serial);
         JsonDocument responseBody = await JsonDocument.ParseAsync(responseStream);
         string networkId = responseBody.RootElement.GetProperty("networkId").GetString()
             ?? throw new Exception("Could not find device in Meraki Cloud.");
@@ -274,8 +274,8 @@ public class Meraki
                 {
                     await PerformOperation(
                         zip,
-                        networkFilePath + $"wireless_bluetooth_settings_{device.serial}",
-                        $"devices/{device.serial}/wireless/bluetooth/settings"
+                        networkFilePath + $"wireless_bluetooth_settings_{device.Serial}",
+                        $"devices/{device.Serial}/wireless/bluetooth/settings"
                     );
                 }
             }
@@ -451,7 +451,7 @@ public class Meraki
     private static string? GetDeviceType(Device device)
     {
         // Adapted from https://github.com/meraki/automation-scripts/blob/master/backup_configs/backup_configs.py#L58
-        string family = device.model[..2];
+        string family = device.Model[..2];
         return family switch
         {
             "MR" => "wireless",
