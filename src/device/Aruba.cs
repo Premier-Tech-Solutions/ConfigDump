@@ -8,7 +8,8 @@ public static class Aruba
 {
     // Designed based on Aruba 2930M-24G (JL319A)
     public static bool IsAruba(this Device device)
-        => device.model.Contains("aruba", StringComparison.InvariantCultureIgnoreCase);
+        => device.model.Contains("aruba", StringComparison.InvariantCultureIgnoreCase) &&
+            device.model.Contains("JL", StringComparison.InvariantCultureIgnoreCase);
 
     [Obsolete("This method is currently unfinished due to SSH misbehaving.", false)]
     public async static Task<byte[]> DumpSSH(Device device)

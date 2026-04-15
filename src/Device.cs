@@ -26,31 +26,22 @@ public class Device
     public required List<IPAddress> ips;
     public required List<Credential> credentials;
 
+    private (Func<bool>, Func<Device, Task<ConfigResult>>)[] ConfigDumpers => [
+        (this.IsMeraki, Meraki.Instance.DumpCloud),
+        (this.IsAruba, Aruba.DumpHTTP),
+        (this.IsRuckus, Ruckus.DumpHTTPS),
+        (this.IsLexmark, Lexmark.DumpHTTP),
+        (this.IsHPEUPS, HPEUPS.DumpHTTPS),
+        (this.IsHPESwitch, HPESwitch.DumpHTTPS),
+        (this.IsArubaION, ArubaION.DumpHTTPS),
+    ];
+
     public async Task<ConfigResult> DumpConfig()
     {
-        if (this.IsMeraki())
+        foreach ((Func<bool> predicate, Func<Device, Task<ConfigResult>> dumper) in ConfigDumpers)
         {
-            return await Meraki.Instance.DumpCloud(this);
-        }
-        else if (this.IsAruba())
-        {
-            return await Aruba.DumpHTTP(this);
-        }
-        else if (this.IsRuckus())
-        {
-            return await Ruckus.DumpHTTPS(this);
-        }
-        else if (this.IsLexmark())
-        {
-            return await Lexmark.DumpHTTP(this);
-        }
-        else if (this.IsHPEUPS())
-        {
-            return await HPEUPS.DumpHTTPS(this);
-        }
-        else if (this.IsHPESwitch())
-        {
-            return await HPESwitch.DumpHTTPS(this);
+            if (predicate.Invoke())
+                return await dumper.Invoke(this);
         }
 
         return new ConfigResult(new Exception("No config dumping method for device."));
