@@ -14,9 +14,12 @@ A command-line utility to bulk dump config files from various devices.
             "id": "device-1",
             "serial": "AAAA-BBBB-CCCC",
             "model": "Aruba ASDF",
-            "ip": "1.2.3.4",
-            "username": "admin",
-            "password": "p@ssw0rd",
+            "ips": ["192.168.0.10", "1.2.3.4"],
+            "credentials": [{
+                "url": "https://192.168.0.10/",
+                "username": "admin",
+                "password": "p@ssw0rd"
+            }]
         },
         ...
     ]
