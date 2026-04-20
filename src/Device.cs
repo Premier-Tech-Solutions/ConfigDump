@@ -7,6 +7,32 @@ public class DeviceInfo
 {
     public MerakiInfo? Meraki { get; set; }
     public required List<Device> Devices { get; set; }
+
+    public async Task<Dictionary<string, ConfigResult>> DumpConfigs()
+    {
+        Dictionary<string, ConfigResult> configs = [];
+
+        await Task.WhenAll(Devices.Select(async device =>
+        {
+            ConfigResult result;
+
+            await Console.Out.WriteLineAsync($"Dumping configuration for {device.Id}...");
+            try
+            {
+                result = await device.DumpConfig();
+                await Console.Out.WriteLineAsync($"{device.Id} configuration dumped!");
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"{device.Id} configuration dump failed! Reason: {ex.Message}");
+                result = new ConfigResult(ex);
+            }
+
+            configs.Add(device.Id, result);
+        }));
+
+        return configs;
+    }
 }
 
 public class Credential
@@ -96,15 +122,3 @@ public class ConfigResult
         Value = ex.Message;
     }
 }
-
-// public static class Utilities
-// {
-//     public static Uri WithScheme(string uri, string scheme)
-//     {
-//         return new UriBuilder(uri)
-//         {
-//             Scheme = scheme,
-//             Port = -1,
-//         }.Uri;
-//     }
-// }

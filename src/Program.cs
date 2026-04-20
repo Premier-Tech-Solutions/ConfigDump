@@ -6,94 +6,53 @@ using System.Reflection;
 using System.Text.Json;
 using ConfigDump.Device;
 
-class Program
+class Program(Uri deviceUri, Uri postUri)
 {
     public static Version AppVersion
     {
         get => Assembly.GetEntryAssembly()?.GetName()?.Version ?? new();
     }
 
-    public static async Task<int> Main(string[] args)
+    private readonly HttpClient httpClient = new();
+    private readonly JsonSerializerOptions jsonOptions = new()
     {
-        JsonSerializerOptions jsonOptions = new()
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        HttpClient httpClient = new();
-        DeviceInfo? deviceInfo = null;
-        Uri postUrl;
+        PropertyNameCaseInsensitive = true
+    };
 
-        // Fetch the devices to dump the configs for
+    public readonly Uri DeviceUri = deviceUri;
+    public readonly Uri PostUri = postUri;
+
+    public async Task<(ExitCode, DeviceInfo?)> GetDevices()
+    {
         try
         {
-            postUrl = new Uri(args[1]);
             Console.WriteLine("Downloading device information.");
-            deviceInfo = await httpClient.GetFromJsonAsync<DeviceInfo>(args[0], jsonOptions)
-                ?? throw new NullReferenceException();
-        }
-        catch (IndexOutOfRangeException)
-        {
-            Console.WriteLine($@"ConfigDump: bulk dump config files from various devices
-        Release {AppVersion}
-        Usage: configdump <DEVICES> <CONFIGS>
-
-        DEVICES is the web URL to get the device information from.
-        CONFIGS is the web URL to post the configs to.
-        ");
-            return ExitCode.INVALID_COMMAND_LINE;
+            return (ExitCode.SUCCESS, await httpClient.GetFromJsonAsync<DeviceInfo>(DeviceUri, jsonOptions));
         }
         catch (OperationCanceledException)
         {
             Console.Error.WriteLine("Timed out while receiving device information from devices URL.");
-            return ExitCode.TIMEOUT;
-        }
-        catch (Exception ex) when (ex is UriFormatException || ex is InvalidOperationException)
-        {
-            Console.Error.WriteLine("Invalid devices URL.");
-            return ExitCode.INVALID_DATA;
+            return (ExitCode.TIMEOUT, null);
         }
         catch (HttpRequestException)
         {
             Console.Error.WriteLine("Could not get device information from devices URL.");
-            return ExitCode.BAD_NET_RESP;
+            return (ExitCode.BAD_NET_RESP, null);
         }
-        catch (Exception ex) when (ex is JsonException || ex is NullReferenceException)
+        catch (JsonException)
         {
             Console.Error.WriteLine("Device JSON is invalid.");
-            return ExitCode.INVALID_DATA;
+            return (ExitCode.INVALID_DATA, null);
         }
+    }
 
-        // Initialise the Meraki Cloud helper if we have an API key
-        if (deviceInfo.Meraki is not null)
-            await Meraki.Initialise(deviceInfo.Meraki);
-
-        // Dump all the configs asynchronously
-        Dictionary<string, ConfigResult> configs = [];
-        await Task.WhenAll(deviceInfo.Devices.Select(async device =>
-        {
-            ConfigResult result;
-
-            await Console.Out.WriteLineAsync($"Dumping configuration for {device.Id}...");
-            try
-            {
-                result = await device.DumpConfig();
-                await Console.Out.WriteLineAsync($"{device.Id} configuration dumped!");
-            }
-            catch (Exception ex)
-            {
-                await Console.Error.WriteLineAsync($"{device.Id} configuration dump failed! Reason: {ex.Message}");
-                result = new ConfigResult(ex);
-            }
-
-            configs.Add(device.Id, result);
-        }));
-
-        // Send the configs back
+    public async Task<ExitCode> SendConfigs(Dictionary<string, ConfigResult> configs)
+    {
         HttpResponseMessage response;
         try
         {
             Console.WriteLine("Uploading device configs.");
-            response = await httpClient.PostAsJsonAsync(postUrl, configs, jsonOptions);
+            response = await httpClient.PostAsJsonAsync(PostUri, configs, jsonOptions);
         }
         catch (HttpRequestException)
         {
@@ -113,5 +72,55 @@ class Program
         }
 
         return ExitCode.SUCCESS;
+    }
+
+    public static async Task<int> Main(string[] args)
+    {
+        // Process command-line arguments
+        if (args.Length != 2)
+        {
+            Console.WriteLine($@"ConfigDump: bulk dump config files from various devices
+Release {AppVersion}
+Usage: configdump <DEVICES> <CONFIGS>
+
+DEVICES is the web URL to get the device information from.
+CONFIGS is the web URL to post the configs to.
+");
+            return (int)ExitCode.INVALID_COMMAND_LINE;
+        }
+
+        Uri deviceUri;
+        Uri postUri;
+
+        try
+        {
+            deviceUri = new(args[0]);
+            postUri = new(args[1]);
+        }
+        catch (Exception ex) when (ex is UriFormatException || ex is InvalidOperationException)
+        {
+            Console.Error.WriteLine("Invalid URI argument.");
+            return (int)ExitCode.INVALID_COMMAND_LINE;
+        }
+
+        Program instance = new(deviceUri, postUri);
+
+        (ExitCode exitCode, DeviceInfo? deviceInfo) = await instance.GetDevices();
+        if (exitCode != ExitCode.SUCCESS)
+        {
+            return (int)exitCode;
+        }
+        else if (deviceInfo is null)
+        {
+            Console.Error.WriteLine("No Device JSON returned.");
+            return (int)ExitCode.INVALID_DATA;
+        }
+
+        // Initialise the Meraki Cloud helper if we have an API key
+        if (deviceInfo.Meraki is not null)
+            await Meraki.Initialise(deviceInfo.Meraki);
+
+        Dictionary<string, ConfigResult> configs = await deviceInfo.DumpConfigs();
+        return (int)await instance.SendConfigs(configs);
     }
 }
