@@ -1,7 +1,7 @@
+namespace ConfigDump.Device;
+
 using System.Net;
 using System.Net.Http.Json;
-
-namespace ConfigDump.Device;
 
 public static class Ricoh
 {
@@ -20,7 +20,7 @@ public static class Ricoh
         };
         HttpClient httpClient = new(httpHandler)
         {
-            BaseAddress = new("http://" + device.GetLocalIp() + "/web/guest/en/websys/")
+            BaseAddress = new("http://" + device.PrimaryIp + "/web/guest/en/websys/")
         };
 
 

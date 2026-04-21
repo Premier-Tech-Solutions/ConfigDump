@@ -1,8 +1,5 @@
 namespace ConfigDump.Device;
 
-using System.Net;
-using System.Net.Sockets;
-
 public class DeviceInfo
 {
     public MerakiInfo? Meraki { get; set; }
@@ -49,7 +46,7 @@ public class Device
 {
     public required string Serial { get; set; }
     public required string Model { get; set; }
-    public required List<string> IPs { get; set; }
+    public required string PrimaryIp { get; set; }
     public required List<Credential> Credentials { get; set; }
 
     private (Func<bool>, Func<Device, Task<ConfigResult>>)[] ConfigDumpers => [
@@ -74,21 +71,6 @@ public class Device
 
         return new ConfigResult(new Exception("No config dumping method for device."));
     }
-
-    public IPAddress GetLocalIp() => IPs.Select(IPAddress.Parse).First(ip =>
-    {
-        if (ip.AddressFamily == AddressFamily.InterNetworkV6)
-            return ip.IsIPv6LinkLocal;
-
-        byte[] bytes = ip.GetAddressBytes();
-        return bytes[0] switch
-        {
-            10 => true,
-            172 => bytes[1] >= 16 && bytes[1] <= 31,
-            192 => bytes[1] == 168,
-            _ => false,
-        };
-    });
 
     public Credential GetAdminLogin()
     {

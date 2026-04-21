@@ -23,7 +23,7 @@ configdump <DEVICES> <CONFIGS>
         "device-1": {
             "serial": "AAAA-BBBB-CCCC",
             "model": "Aruba ASDF",
-            "ips": ["192.168.0.10", "1.2.3.4"],
+            "primary_ip": "192.168.0.123",
             "credentials": [{
                 "url": "https://192.168.0.10/",
                 "username": "admin",

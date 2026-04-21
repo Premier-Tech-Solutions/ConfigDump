@@ -1,8 +1,8 @@
+namespace ConfigDump.Device;
+
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-
-namespace ConfigDump.Device;
 
 public static class HPESwitch
 {

@@ -1,9 +1,9 @@
+namespace ConfigDump.Device;
+
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
-
-namespace ConfigDump.Device;
 
 public static class ArubaION
 {
