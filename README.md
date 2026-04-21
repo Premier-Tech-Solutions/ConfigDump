@@ -1,6 +1,16 @@
 # ConfigDump
 A command-line utility to bulk dump config files from various devices.
 
+## Usage
+
+1. Download the latest release from the releases tab.
+2. Create a file in the above JSON format with a list of all devices to backup, and required access information.
+3. Run the command below, replacing `<DEVICES>` with the URL to get the device information from, and `<CONFIGS>` to post the configs to.
+
+```
+configdump <DEVICES> <CONFIGS>
+```
+
 ## Device Request Format
 
 ```json
@@ -9,9 +19,8 @@ A command-line utility to bulk dump config files from various devices.
         "api_key": "0123456890abcdef",
         "organization_id": "1234567890",
     },
-    "devices": [
-        {
-            "id": "device-1",
+    "devices": {
+        "device-1": {
             "serial": "AAAA-BBBB-CCCC",
             "model": "Aruba ASDF",
             "ips": ["192.168.0.10", "1.2.3.4"],
@@ -22,18 +31,21 @@ A command-line utility to bulk dump config files from various devices.
             }]
         },
         ...
-    ]
+    }
 }
 ```
 
-## Usage
+## Device Config Format
 
-1. Download the latest release from the releases tab.
-2. Create a file in the above JSON format with a list of all devices to backup, and required access information.
-3. Run the command below, replacing `<DEVICES>` with the URL to get the device information from, and `<CONFIGS>` to post the configs to.
-
-```
-configdump <DEVICES> <CONFIGS>
+```json
+{
+    "device-1": {
+        "error": false,
+        "file_type": "pcc",
+        "value": "..."
+    },
+    ...
+}
 ```
 
 ## Contributing

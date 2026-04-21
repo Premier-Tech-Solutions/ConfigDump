@@ -15,8 +15,8 @@ public static class MerakiExtensions
 
 public class MerakiInfo
 {
-    public required string api_key;
-    public required string organization_id;
+    public required string ApiKey { get; set; }
+    public required string OrganizationId { get; set; }
 }
 
 public class Meraki
@@ -51,7 +51,7 @@ public class Meraki
 
     private Meraki(MerakiInfo info, OpenApiDocument merakiSpec, List<GetOperation> getOperations, List<JsonElement> defaultConfigs)
     {
-        OrganizationId = info.organization_id;
+        OrganizationId = info.OrganizationId;
 
         HttpClientHandler handler = new()
         {
@@ -65,7 +65,7 @@ public class Meraki
             BaseAddress = new("https://api.meraki.com/api/v1/")
         };
 
-        ApiClient.DefaultRequestHeaders.Authorization = new("Bearer", info.api_key);
+        ApiClient.DefaultRequestHeaders.Authorization = new("Bearer", info.ApiKey);
 
         MerakiSpec = merakiSpec;
         GetOperations = getOperations;

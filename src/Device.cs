@@ -6,29 +6,30 @@ using System.Net.Sockets;
 public class DeviceInfo
 {
     public MerakiInfo? Meraki { get; set; }
-    public required List<Device> Devices { get; set; }
+    public required Dictionary<string, Device> Devices { get; set; }
 
     public async Task<Dictionary<string, ConfigResult>> DumpConfigs()
     {
-        Dictionary<string, ConfigResult> configs = [];
+        // Create result dictionary with reserved capacity to optimise allocation since we know the key count
+        Dictionary<string, ConfigResult> configs = new(Devices.Count);
 
         await Task.WhenAll(Devices.Select(async device =>
         {
             ConfigResult result;
 
-            await Console.Out.WriteLineAsync($"Dumping configuration for {device.Id}...");
+            await Console.Out.WriteLineAsync($"Dumping configuration for {device.Key}...");
             try
             {
-                result = await device.DumpConfig();
-                await Console.Out.WriteLineAsync($"{device.Id} configuration dumped!");
+                result = await device.Value.DumpConfig();
+                await Console.Out.WriteLineAsync($"{device.Key} configuration dumped!");
             }
             catch (Exception ex)
             {
-                await Console.Error.WriteLineAsync($"{device.Id} configuration dump failed! Reason: {ex.Message}");
+                await Console.Error.WriteLineAsync($"{device.Key} configuration dump failed! Reason: {ex.Message}");
                 result = new ConfigResult(ex);
             }
 
-            configs.Add(device.Id, result);
+            configs.Add(device.Key, result);
         }));
 
         return configs;
@@ -46,7 +47,6 @@ public class Credential
 
 public class Device
 {
-    public required string Id { get; set; }
     public required string Serial { get; set; }
     public required string Model { get; set; }
     public required List<string> IPs { get; set; }

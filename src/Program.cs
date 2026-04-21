@@ -16,7 +16,7 @@ class Program(Uri deviceUri, Uri postUri)
     private readonly HttpClient httpClient = new();
     private readonly JsonSerializerOptions jsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
     };
 
     public readonly Uri DeviceUri = deviceUri;
@@ -39,9 +39,10 @@ class Program(Uri deviceUri, Uri postUri)
             Console.Error.WriteLine("Could not get device information from devices URL.");
             return (ExitCode.BAD_NET_RESP, null);
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
             Console.Error.WriteLine("Device JSON is invalid.");
+            Console.Error.WriteLine(ex.Message);
             return (ExitCode.INVALID_DATA, null);
         }
     }
