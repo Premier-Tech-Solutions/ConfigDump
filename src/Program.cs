@@ -26,7 +26,7 @@ class Program(Uri deviceUri, Uri postUri)
     {
         try
         {
-            Console.WriteLine("Downloading device information.");
+            Console.WriteLine("Downloading device information...");
             return (ExitCode.SUCCESS, await httpClient.GetFromJsonAsync<DeviceInfo>(DeviceUri, jsonOptions));
         }
         catch (OperationCanceledException)
@@ -52,7 +52,7 @@ class Program(Uri deviceUri, Uri postUri)
         HttpResponseMessage response;
         try
         {
-            Console.WriteLine("Uploading device configs.");
+            Console.WriteLine("Uploading device configs...");
             response = await httpClient.PostAsJsonAsync(PostUri, configs, jsonOptions);
         }
         catch (HttpRequestException)
