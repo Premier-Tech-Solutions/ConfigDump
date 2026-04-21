@@ -15,6 +15,7 @@ public static class HPEUPS
     {
         CookieContainer cookies = new();
         Credential credential = device.GetAdminLogin();
+        Uri baseAddress = credential.GetBaseUri("https");
         HttpResponseMessage response;
 
         // Create HTTP Client that ignores invalid SSL certificates
@@ -27,17 +28,21 @@ public static class HPEUPS
         };
         HttpClient httpClient = new(httpHandler)
         {
-            BaseAddress = credential.GetBaseUri("https")
+            BaseAddress = baseAddress,
         };
 
-        // Login to get access token
-        response = await httpClient.PostAsJsonAsync("rest/mbdetnrs/1.0/oauth2/token", new
+        // Login to get access token, 
+        JsonContent jsonContent = JsonContent.Create(new
         {
             grant_type = "password",
             scope = "GUIAccess",
-            credential.Username,
-            credential.Password,
+            username = credential.Username,
+            password = credential.Password,
         });
+        // This is needed since the web server doesn't support chunked encoding
+        await jsonContent.LoadIntoBufferAsync();
+
+        response = await httpClient.PostAsync("rest/mbdetnrs/1.0/oauth2/token", jsonContent);
         if (response.StatusCode != HttpStatusCode.OK)
             throw new Exception($"Could not get access token, got {(int)response.StatusCode} {response.ReasonPhrase}");
 
@@ -46,8 +51,8 @@ public static class HPEUPS
         JsonDocument jsonBody = await JsonDocument.ParseAsync(bodyStream);
         string? accessToken = jsonBody.RootElement.GetProperty("access_token").GetString();
 
-        cookies.Add(new Cookie("eaton_user", credential.Username));
-        cookies.Add(new Cookie("eaton_token", accessToken));
+        cookies.Add(baseAddress, new Cookie("eaton_user", credential.Username));
+        cookies.Add(baseAddress, new Cookie("eaton_token", accessToken));
         httpClient.DefaultRequestHeaders.Authorization = new("Bearer", accessToken);
 
         // Download settings
