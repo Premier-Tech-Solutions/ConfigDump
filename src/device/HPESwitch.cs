@@ -1,7 +1,6 @@
 namespace ConfigDump.Device;
 
 using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 
 public static class HPESwitch
@@ -34,11 +33,10 @@ public static class HPESwitch
         };
 
         // Login to get session token
-        response = await httpClient.PostAsJsonAsync("htdocs/login/login.lua", new
-        {
-            credential.Username,
-            credential.Password
-        });
+        response = await httpClient.PostAsync("htdocs/login/login.lua", new FormUrlEncodedContent([
+            KeyValuePair.Create("username", credential.Username),
+            KeyValuePair.Create("password", credential.Password),
+        ]));
         if (response.StatusCode != HttpStatusCode.OK)
             throw new Exception($"Could not login, got {(int)response.StatusCode} {response.ReasonPhrase}");
 
