@@ -23,6 +23,10 @@ public class DeviceInfo
             catch (Exception ex)
             {
                 await Console.Error.WriteLineAsync($"{device.Key} configuration dump failed! Reason: {ex.Message}");
+#if DEBUG
+                // If running in debug environment, print stacktrace too.
+                await Console.Out.WriteLineAsync(ex.StackTrace);
+#endif
                 result = new ConfigResult(ex);
             }
 

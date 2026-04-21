@@ -158,7 +158,7 @@ CONFIGS is the web URL to post the configs to.");
 
         // Initialise the Meraki Cloud helper if we have an API key
         if (deviceInfo.Meraki is not null)
-            Meraki.Initialise(deviceInfo.Meraki).RunSynchronously();
+            Meraki.Initialise(deviceInfo.Meraki).Wait();
 
         // Dump all the device configs, running the operation synchronously
         Dictionary<string, ConfigResult> configs = deviceInfo.DumpConfigs().GetAwaiter().GetResult();

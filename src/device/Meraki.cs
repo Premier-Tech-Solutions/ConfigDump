@@ -76,7 +76,7 @@ public class Meraki
     // Set up the Meraki Cloud helper
     public static async Task<Meraki> Initialise(MerakiInfo info)
     {
-        Console.WriteLine("Initialising Meraki Cloud helper.");
+        Console.WriteLine("Fetching Meraki Cloud OpenAPI specification...");
 
         HttpClient httpClient = new();
         Stream bodyStream;
@@ -102,7 +102,12 @@ public class Meraki
 
         string? githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (githubToken is not null)
+        {
+            Console.WriteLine("Using GITHUB_TOKEN environment variable.");
             httpClient.DefaultRequestHeaders.Authorization = new("Bearer", githubToken);
+        }
+
+        Console.WriteLine("Fetching Meraki Cloud backup script repository tree...");
 
         // Get Git file tree for the Meraki Cloud backup script
         httpClient.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
@@ -113,6 +118,8 @@ public class Meraki
             ?? throw new Exception("Could not parse Meraki Cloud automation scripts repository.");
         bodyStream = await httpClient.GetStreamAsync(tree + "?recursive=1");
         jsonBody = await JsonDocument.ParseAsync(bodyStream);
+
+        Console.WriteLine("Downloading Meraki Cloud backup script files...");
 
         // Loop through files, grabbing their raw blob data if needed
         httpClient.DefaultRequestHeaders.Remove("Accept");
@@ -212,6 +219,9 @@ public class Meraki
             // Adapted roughly from https://github.com/meraki/automation-scripts/blob/master/backup_configs/backup_configs.py#L353
             (operation, spec) =>
                 operation.OperationId.StartsWith("getNetwork") &&
+                // Skip this operation as it errors on routed networks.
+                // We'll do it later if we're on a passthrough network.
+                operation.OperationId != "getNetworkApplianceVpnBgp" &&
                 operation.Logic != "skipped" &&
                 operation.Logic != "script" &&
                 operation.Logic != "ssids" && (
@@ -229,6 +239,23 @@ public class Meraki
         // Adapted roughly from https://github.com/meraki/automation-scripts/blob/master/backup_configs/backup_configs.py#L398
         if (productTypes.Contains("appliance"))
         {
+            // Backup network appliance settings (not saved by the script for some reason)
+            JsonDocument? applianceSettings = await PerformOperation(
+                zip,
+                networkFilePath + "appliance_settings",
+                $"networks/{networkId}/appliance/settings"
+            );
+
+            // Backup VPN BGP configuration if running in passthrough mode
+            if (applianceSettings?.RootElement.GetProperty("deploymentMode").GetString() != "routed")
+            {
+                await PerformOperation(
+                    zip,
+                    networkFilePath + "appliance_vpn_bgp",
+                    $"networks/{networkId}/appliance/vpn/bgp"
+                );
+            }
+
             // Check if VLANs enabled, as presence of the VLAN settings file indicates non-default configuration
             if (zip.GetEntry(networkFilePath + "appliance_vlans_settings.json") is null)
             {
@@ -369,14 +396,14 @@ public class Meraki
     }
 
     // Backup one operation
-    private async Task PerformOperation(
+    private async Task<JsonDocument?> PerformOperation(
         ZipArchive zip,
         string filePath,
         string operationPath
     )
     {
 #warning Skip unscoped endpoints. This is a bad fix.
-        if (operationPath.Contains("inboundFirewallRule")) return;
+        if (operationPath.Contains("inboundFirewallRule")) return null;
 
         // Download configuration from endpoint, then parse it as JSON
         Stream responseStream = await ApiClient.GetStreamAsync(
@@ -390,14 +417,14 @@ public class Meraki
         {
             if (JsonElement.DeepEquals(defaultConfig, responseBody.RootElement))
             {
-                return;
+                return responseBody;
             }
         }
 
         // Skip empty objects
         try
         {
-            if (responseBody.RootElement.GetPropertyCount() < 1) return;
+            if (responseBody.RootElement.GetPropertyCount() < 1) return null;
         }
         // This is raised if RootElement was not an Object, so ignore it to save every non-object JSON
         catch (InvalidOperationException) { }
@@ -414,6 +441,7 @@ public class Meraki
         );
 
         responseBody.WriteTo(writer);
+        return responseBody;
     }
 
     // Check if a given operation has a given scope/tag
