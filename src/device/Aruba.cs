@@ -1,7 +1,7 @@
 namespace ConfigDump.Device;
 
 using System.Net;
-using System.Text.Json;
+using Newtonsoft.Json.Linq;
 using Renci.SshNet;
 
 public static class Aruba
@@ -66,33 +66,22 @@ public static class Aruba
         if (response.StatusCode != HttpStatusCode.OK)
             throw new Exception($"Could not login, got {(int)response.StatusCode} {response.ReasonPhrase}");
 
-        // Go to home to get request headers, such as the request token
+        // Go to home to get the request token
         StreamReader reader = new(await httpClient.GetStreamAsync("html/homeStatus.html"));
+        string requestToken = "";
 
-        // Read until headers
+        // Parse request token
+        const string TOKEN_PREFIX = "'Request-Token': \"";
         while (reader.Peek() >= 0)
         {
             string? line = await reader.ReadLineAsync();
             if (line is null) break;
-            if (line == "Ext.Ajax.defaultHeaders = {") break;
+            if (line.StartsWith(TOKEN_PREFIX))
+            {
+                requestToken += line[TOKEN_PREFIX.Length..^2];
+                break;
+            }
         }
-
-        string headersJson = "{";
-
-        // Read headers until end curly brace
-        while (reader.Peek() >= 0)
-        {
-            string? line = await reader.ReadLineAsync();
-            if (line is null) break;
-            if (line == "};") break;
-
-            headersJson += line;
-        }
-
-        // Parse headers and add them to default request headers
-        Dictionary<string, string>? headers = JsonSerializer.Deserialize<Dictionary<string, string>>(headersJson + "}", JsonSerializerOptions.Web);
-        foreach (KeyValuePair<string, string> kvp in headers ?? [])
-            httpClient.DefaultRequestHeaders.Add(kvp.Key, kvp.Value);
 
         // Go to system updates to get config information
         reader = new(await httpClient.GetStreamAsync("html/sysUp-dw.html"));
@@ -106,35 +95,35 @@ public static class Aruba
             if (line is null) break;
             if (line.StartsWith(CONFIG_PREFIX))
             {
-                configsJson += line.Substring(CONFIG_PREFIX.Length, line.Length - CONFIG_PREFIX.Length - 1);
+                configsJson += line[CONFIG_PREFIX.Length..^1];
                 break;
             }
         }
 
-        // Parse config information
-        JsonElement configs = JsonElement.Parse(configsJson);
+        // Parse config information, using Newtonsoft.JSON since this is Relaxed JSON
+        JArray configs = JArray.Parse(configsJson);
 
         // Find the primary config, or secondary config, or any config
-        JsonElement config;
+        JObject config;
         try
         {
-            config = configs.EnumerateArray().First(config => config.GetProperty("priDefault").GetBoolean());
+            config = (JObject)configs.First(config => (bool?)((JObject?)config)?["priDefault"] ?? false);
         }
         catch (InvalidOperationException)
         {
             try
             {
-                config = configs.EnumerateArray().FirstOrDefault(config => config.GetProperty("secDefault").GetBoolean());
+                config = (JObject)configs.First(config => (bool?)((JObject?)config)?["priDefault"] ?? false);
             }
             catch (InvalidOperationException)
             {
-                config = configs[0];
+                config = (JObject)configs[0];
             }
         }
 
         // Download config and return it
         response = await httpClient.GetAsync(
-            "html/json.html?method:downloadConfigFileToPC&name=" + config.GetProperty("name").GetString()
+            $"html/json.html?method:downloadConfigFileToPC&requestToken={requestToken}&name={config["name"]}"
         );
 
         if (response.StatusCode != HttpStatusCode.OK)
