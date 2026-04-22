@@ -7,6 +7,8 @@ using System.Xml.Linq;
 
 public static class ArubaION
 {
+    // Designed based on HP ARUBA ION 1930 24G 4SFP+ POE+ 195W SWITCH
+
     public static bool IsArubaION(this Device device)
         => device.Model.Contains("aruba", StringComparison.InvariantCultureIgnoreCase) && (
             device.Model.Contains("ION", StringComparison.InvariantCultureIgnoreCase) ||
