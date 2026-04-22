@@ -17,6 +17,7 @@ public static class ArubaION
     {
         CookieContainer cookies = new();
         Credential credential = device.GetAdminLogin();
+        Uri baseAddress = credential.GetBaseUri("https");
         HttpResponseMessage response;
 
         // Create HTTP Client that ignores invalid SSL certificates
@@ -29,14 +30,24 @@ public static class ArubaION
         };
         HttpClient httpClient = new(httpHandler)
         {
-            BaseAddress = credential.GetBaseUri("https")
+            BaseAddress = new(baseAddress + "csa73a445d/hpe/"),
         };
 
         string queryParams =
             $"user={Uri.EscapeDataString(credential.Username)}&password={Uri.EscapeDataString(credential.Password)}&ssd=true&";
 
         // Get encryption setting
-        Stream bodyStream = await httpClient.GetStreamAsync("device/wcd?{EncryptionSetting}");
+        Uri encryptionUri = new(
+            baseAddress + "device/wcd?{EncryptionSetting}",
+            new UriCreationOptions
+            {
+                // This is needed since the query string contains curly braces the HttpClient wants to escape;
+                // however, the webserver expects them to not be escaped.
+                DangerousDisablePathAndQueryCanonicalization = true,
+            }
+        );
+
+        Stream bodyStream = await httpClient.GetStreamAsync(encryptionUri);
         XDocument bodyXml = await XDocument.LoadAsync(bodyStream, LoadOptions.None, default);
         XElement? encryptionSetting = bodyXml.Root?.Element("DeviceConfiguration")?.Element("EncryptionSetting");
         if (encryptionSetting is not null && encryptionSetting.Element("passwEncryptEnable")?.Value == "1")
@@ -52,16 +63,17 @@ public static class ArubaION
         }
 
         // Login to get session token
-        response = await httpClient.GetAsync("csa73a445d/hpe/config/system.xml?action=login&" + queryParams);
+        response = await httpClient.GetAsync("config/system.xml?action=login&" + queryParams);
         if (response.StatusCode != HttpStatusCode.OK)
             throw new Exception($"Could not login, got {(int)response.StatusCode} {response.ReasonPhrase}");
 
-        cookies.Add(new Cookie("userName", credential.Username));
-        cookies.Add(new Cookie("sessionID", response.Headers.GetValues("sessionid").First()));
+        string sessionID = response.Headers.GetValues("sessionID").First();
+        cookies.Add(baseAddress, new Cookie("userName", credential.Username));
+        cookies.Add(baseAddress, new Cookie("sessionID", sessionID[..sessionID.IndexOf(';')]));
 
         // Download and return configuration
         return new ConfigResult(
-            await httpClient.GetByteArrayAsync("csa73a445d/hpe/http_download?action=3&ssd=4"),
+            await httpClient.GetByteArrayAsync("http_download?action=3&ssd=4"),
             "txt"
         );
     }
