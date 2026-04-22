@@ -4,8 +4,8 @@ A command-line utility to bulk dump config files from various devices.
 ## Usage
 
 1. Download the latest release from the releases tab.
-2. Create a file in the above JSON format with a list of all devices to backup, and required access information.
-3. Run the command below, replacing `<DEVICES>` with the URL to get the device information from, and `<CONFIGS>` to post the configs to.
+2. Run the command below, replacing `<DEVICES>` with the URL to get the device information from,
+and `<CONFIGS>` to post the configs to.
 
 ```
 configdump <DEVICES> <CONFIGS>
@@ -51,6 +51,10 @@ configdump <DEVICES> <CONFIGS>
 ## Contributing
 
 Ensure you have the .NET SDK 10.0 and the .NET Sign Tool[^1] installed.
+
+The program can be tested without a webserver by using the `--test` argument.
+This makes the program take the device information JSON from the console input (hit enter twice to confirm),
+and dumps the configs to `configs.json` in the current working directory.
 
 ```cmd
 git clone git@github.com:PremierTech/ConfigDump.git
